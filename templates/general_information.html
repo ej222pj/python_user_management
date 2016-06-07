@@ -1,0 +1,75 @@
+<!-- extend from base layout -->
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row" style="width: 75%;">
+    <h1>General information</h1>
+    <h3>Edit Settings</h3>
+
+     <div class="col-md-10 form-content">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="col-md-12">
+                    <div class="alert alert-warning" role="alert">{{ message }} </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+
+        {% if form.errors %}
+        {% for field_name, field_errors in form.errors|dictsort if field_errors %}
+            {% for error in field_errors %}
+                <div class="col-md-12">
+                    <div class="alert alert-danger" role="alert">{{ error }} </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <form action="" method="post" name="general_information" class="form-horizontal" role="form">
+    {{form.hidden_tag()}}
+        <div class="form-group col-md-8">
+            <label for="inputEmail3">Gym Name</label>
+            {{form.gym_name(size=80, value=data.gym_name, class="form-control")}}
+        </div>
+
+        <div class="form-group col-md-8">
+            <label for="inputEmail3">Address</label>
+            {{form.address(size=80, value=data.address, class="form-control")}}
+        </div>
+
+        <div class="form-group col-md-8">
+            <label for="inputEmail3">Phone number</label>
+            {{form.phone(size=80, value=data.phone, class="form-control")}}
+        </div>
+
+        <div class="form-group col-md-8">
+            <label for="inputEmail3">Zip Code</label>
+            {{form.zip_code(size=80, value=data.zip_code, class="form-control")}}
+        </div>
+
+        <div class="form-group col-md-8">
+            <label for="inputEmail3">City</label>
+            {{form.city(size=80, value=data.city, class="form-control")}}
+        </div>
+
+        <div class="form-group col-md-8">
+            <label for="inputEmail3">Email</label>
+            {{form.email(size=80, value=data.email, class="form-control", type="email")}}
+        </div>
+
+        <div class="form-group col-md-8">
+
+        </div>
+
+        <div class="form-group col-md-6">
+            <label for="inputEmail3">Password needed for confirmation</label>
+            {{form.password(size=80, value='', class="form-control", type="password")}}
+            <input type="submit" value="Save Settings" class="btn btn-primary">
+        </div>
+    </form>
+</div>
+{% endblock %}

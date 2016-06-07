@@ -1,0 +1,44 @@
+<!-- extend from base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+        {% for message in messages %}
+            <li>{{ message }} </li>
+        {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    {% if form.errors %}
+        <ul class="errors">
+            {% for field_name, field_errors in form.errors|dictsort if field_errors %}
+                {% for error in field_errors %}
+                    <li>{{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+<h1>Create new debt</h1>
+<form action="" method="post" name="new_debt" class="form-horizontal" role="form">
+    {{form.hidden_tag()}}
+        <div class="form-group">
+            <label for="inputAmount">Product</label>
+
+                    {{form.product(size=20, placeholder='')}}
+
+            <label for="inputAmount">Amount</label>
+
+                    {{form.amount(size=10, placeholder='')}} SEK
+        </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <input type="submit" value="Create" class="btn btn-default">
+        </div>
+    </div>
+</form>
+{% endblock %}

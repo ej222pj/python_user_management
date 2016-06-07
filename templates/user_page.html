@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>{{data.firstname}} {{data.lastname}}<span style="margin-left: 2%;" class="btn btn-info btn-xs"><a href='/edit_user/{{data.id}}'>Edit user</a></span></h2>
+
+    <p>E-mail : {{ data.email }}</p>
+    <p>Phone : {{ data.phone }}</p>
+    <p>Address : {{ data.address }}</p>
+    {% if data.address2 %}
+    <p>Address 2 : {{ data.address2 }}</p>
+    {% endif %}
+    <p>City : {{ data.city }}</p>
+    <p>Zip Code : {{ data.zip_code }}</p>
+    <p>Tag-ID : {{ data.tag_id }}</p>
+    <p>Gender : {{ data.gender }}</p>
+    <p>Expiry date : {{ data.expiry_date }}</p>
+
+    Membership Status :
+    {% if data.status == "Active" or data.status == "Special" %}
+    <span style="color:green">{{data.status}}</span>
+    {% elif data.status == "Frozen" %}
+    <span style="color:blue">{{data.status}}</span>
+    {% elif data.status == "Free" %}
+    <span style="color:darkgoldenrod">{{data.status}}</span>
+    {% else %}
+    <span style="color:red">{{data.status}}</span>
+    {% endif %}
+
+
+
+    <p class="debt">Debts<span class="debtlink">
+        <a href='/debt_create/{{data.id}}'>Create new debt</a></span></p>
+        <table class="table table-hover">
+        <tbody>
+            <thead>
+                 <tr>
+                    <th>Product</th><th>Amount</th><th>Date</th>
+                </tr>
+            </thead>
+            {% if debts %}
+                {% for debt in debts %}
+                    <tr>
+                        <td>{{debt.product}}</td>
+                        <td>{{debt.amount}} SEK</td>
+                        <td>{{debt.create_date}}</td>
+                        <td>
+                            <form id="tjuue" action="/debt_delete/{{ debt.id }}/{{ data.id }}" method="post"
+                                  onsubmit="return confirm('Do you really want to delete this debt?')">
+                            <input type="submit"  value="Delete Debt" onclick="">
+                            </form>
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+            {% endif %}
+        </tbody>
+        </table>
+
+
+{% if tags %}
+    <hr>
+<h3>Recent tagevents by {{ data.name }}</h3>
+    <table class="table table-hover">
+    <tbody>
+        <thead>
+            <tr>
+                <th>Timestamp</th><th>Tag-ID</th>
+            </tr>
+        </thead>
+                {% for tag in tags %}
+                <tr>
+                    <td>{{tag.timestamp}}</td> <td>{{tag.tag_id}}</td>
+                </tr>
+                {% endfor %}
+    </tbody>
+    </table>
+{% endif %}
+
+
+{% endblock %}

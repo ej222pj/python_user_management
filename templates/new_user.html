@@ -1,0 +1,99 @@
+<!-- extend from base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row" style="width: 50%; margin:0 auto;">
+    <h1>Create new user</h1>
+    <div class="col-md-10 form-content">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="col-md-12">
+                    <div class="alert alert-warning" role="alert">{{ message }} </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+
+        {% if form.errors %}
+        {% for field_name, field_errors in form.errors|dictsort if field_errors %}
+            {% for error in field_errors %}
+                <div class="col-md-12">
+                    <div class="alert alert-danger" role="alert">{{ error }} </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <form action="" method="post" name="new_user" class="form-horizontal" role="form">
+        {{form.hidden_tag()}}
+
+            <div class="form-group col-md-6" style="margin-right: 5px;">
+                <label for="inputEmail3">Firstname</label>
+                {{form.firstname(size=80, placeholder='Firstname', class="form-control", type="text")}}
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="inputEmail3">Lastname</label>
+                {{form.lastname(size=80, placeholder='Lastname', class="form-control", type="text")}}
+            </div>
+
+            <div class="form-group col-md-6" style="margin-right: 5px;">
+                <label for="inputEmail3">E-mail</label>
+                {{form.email(size=80, placeholder='test@test.te', class="form-control", type="email")}}
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="inputEmail3">Phone</label>
+                {{form.phone(size=80, placeholder='070 123 4567', class="form-control", type="text")}}
+            </div>
+
+            <div class="form-group col-md-8">
+                <label for="inputEmail3">Address</label>
+                {{form.address(size=80, placeholder='Streetname', class="form-control", type="text")}}
+            </div>
+
+            <div class="form-group col-md-8">
+                <label for="inputEmail3">Address 2</label>
+                {{form.address2(size=80, placeholder='Streetname 2', class="form-control", type="text")}}
+            </div>
+
+            <div class="form-group col-md-6" style="margin-right: 5px;">
+                <label for="inputEmail3">City</label>
+                {{form.city(size=80, placeholder='City', class="form-control", type="text")}}
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="inputEmail3">Zip code</label>
+                {{form.zip_code(size=80, placeholder='Zip', class="form-control", type="text")}}
+            </div>
+
+            <div class="form-group col-md-8">
+                <label for="gender">Gender</label>
+                {{form.gender(style="list-style-type: none;")}}
+            </div>
+
+            <div class="form-group col-md-6" style="margin-right: 5px;">
+                <label for="inputEmail3">Social Security Number</label>
+                {{form.ssn(type="datetime", placeholder='19900101', class="form-control", type="text")}}
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="inputEmail3">Expiry date</label>
+                {{form.expiry_date(type="datetime", placeholder='2020-01-01', class="form-control", type="text")}}
+            </div>
+
+            <div class="form_group col-md-8">
+                <label for="inputEmail3">Membership Status*</label>
+                {{form.status(style="list-style-type: none;")}}
+            </div>
+
+            <div class="form-group col-md-12">
+                <input type="submit" value="Create" class="btn btn-default">
+            </div>
+
+    </form>
+</div>
+{% endblock %}
