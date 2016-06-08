@@ -7,7 +7,7 @@ from optparse import OptionParser
 import config as cfg
 from flaskr_init import app, db, jsonify, render_template, flash, redirect, Response, session
 from db_models.user import User
-from forms.edit_user import EditUser
+from forms.user import EditUser
 from forms.new_user import NewUser
 from forms.search_user import SearchUser
 from forms.login import Login

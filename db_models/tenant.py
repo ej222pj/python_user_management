@@ -27,25 +27,25 @@ class Tenant(db.Model):
         :param id: Id of the Tenant
         :type id: integer
         :param username: Tenants username
-        :type username: string
+        :type username: string (80)
         :param password: Tenants password
-        :type password: string
+        :type password: string (80)
         :param image: Image url
-        :type image: string
+        :type image: string (200)
         :param create_date: Create date of the Tenant
         :type create_date: date
         :param company_name: Company name to the company
-        :type company_name: string
+        :type company_name: string (100)
         :param address: Address to the company
-        :type address: string
+        :type address: string (50)
         :param phone: Phone to the company or the owner
-        :type phone: string
+        :type phone: string  (20)
         :param zip_code: Zip Code to the company
-        :type zip_code: string
+        :type zip_code: string (10)
         :param city: City the company is located in
-        :type city: string
+        :type city: string (120)
         :param email: Email to the company
-        :type email: string
+        :type email: string (120)
         """
         self.id = id
         self.username = username

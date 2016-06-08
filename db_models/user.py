@@ -30,31 +30,31 @@ class User(db.Model):
         :param id: Id of the User
         :type id: integer
         :param firstname: Users firstname
-        :type firstname: string
+        :type firstname: string (80)
         :param lastname: Users lastname
-        :type lastname: string
+        :type lastname: string (80)
         :param email: Email to the User
-        :type email: string
+        :type email: string (120)
         :param phone: Users phone number
-        :type phone: string
+        :type phone: string (20)
         :param address: Address to the user
-        :type address: string
+        :type address: string (50)
         :param address2: Second Address to the user
-        :type address2: string
+        :type address2: string (50)
         :param city: City of the user
-        :type city: string
+        :type city: string (120)
         :param zip_code: Zip Code to the User
-        :type zip_code: string
+        :type zip_code: string (10)
         :param gender: Users gender
-        :type gender: string
-        :param ssn: Users SSN
-        :type ssn: string
+        :type gender: string (10)
+        :param ssn: Users Social Security Number
+        :type ssn: string (13)
         :param expiry_date: Expire date of the users membership
         :type expiry_date: date
         :param create_date: Create date of the user
         :type create_date: date
         :param status: Users status
-        :type status: string
+        :type status: string (50)
         """
         self.id = id
         self.firstname = firstname
