@@ -19,13 +19,11 @@ class Tenant(db.Model):
     city = db.Column(db.String(120))
     email = db.Column(db.String(120))
 
-    def __init__(self, id=None, username=None, password=None, image=None, create_date=None, company_name=None,
+    def __init__(self, username=None, password=None, image=None, create_date=None, company_name=None,
                  address=None, phone=None, zip_code=None, city=None, email=None):
         """
         Called when creating a new Tenant class.
 
-        :param id: Id of the Tenant
-        :type id: integer
         :param username: Tenants username
         :type username: string (80)
         :param password: Tenants password
@@ -47,7 +45,6 @@ class Tenant(db.Model):
         :param email: Email to the company
         :type email: string (120)
         """
-        self.id = id
         self.username = username
         self.password = password
         self.image = image

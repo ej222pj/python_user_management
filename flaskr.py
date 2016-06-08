@@ -7,10 +7,14 @@ from optparse import OptionParser
 import config as cfg
 from flaskr_init import app, db, jsonify, render_template, flash, redirect, Response, session
 from db_models.user import User
-from forms.user import EditUser
-from forms.new_user import NewUser
+from db_models.tenant import Tenant
+from forms.user import User
+# from forms.new_user import NewUser
 from forms.search_user import SearchUser
 from forms.login import Login
+from forms.edit_general_information import EditGeneralInformation
+from forms.edit_tenant import EditTenant
+from forms.register import Register
 
 app.config.from_pyfile('config.py')
 app_name = 'user_management'
@@ -69,11 +73,12 @@ def login():
         if not check_session():
             form = Login()
             if form.validate_on_submit():
-                cl = registration_client.RegisterLoginSqlClient()
-                stored_hash = cl.do_login(form.username.data.title())
+                stored_hash = Tenant.query.with_entities(Tenant.password)\
+                    .filter_by(username=form.username.data.title()).first()
+
                 if stored_hash is not None:
+                    # Uses stored_hash to check if password is correct.
                     if bcrypt.hashpw(form.password.data, stored_hash) == stored_hash:
-                        # Use above to match passwords
                         session['loggedIn'] = True
                         session['username'] = form.username.data.title()
                         flash('Welcome %s' % form.username.data.title())
@@ -94,7 +99,7 @@ def login():
 @app.route('/logout', methods=['GET'])
 def logout():
     """
-    Logouts the tenant. Destroys the session and redirects to the front page again.
+    Log outs the tenant. Destroys the session and redirects to the front page again.
 
     :return: redirect
     """
@@ -123,19 +128,12 @@ def registration():
                 # 2 Hash the password
                 hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
                 # 3 Save the Tenant in the db
-                registered_tenant = {'username': form.username.data.title(),
-                                     'password': hashed_password,
-                                     'active_fortnox': form.active_fortnox.data,
-                                     'gym_name': form.gym_name.data,
-                                     'address': form.address.data,
-                                     'phone': form.phone.data,
-                                     'zip_code': form.zip_code.data,
-                                     'city': form.city.data,
-                                     'email': form.email.data,
-                                     'pass': registration_client.cfg.TENANT_PASSWORD + form.username.data.title()}
+                tmp_tenant = Tenant(0, form.username.data.title(), hashed_password, form.company_name.data, None,
+                                    form.address.data, form.phone.data, form.zip_code.data, form.city.data,
+                                    form.email.data)
 
-                cl = registration_client.RegisterLoginSqlClient()
-                if cl.do_registration(registered_tenant):
+                db.session.add(tmp_tenant)
+                if db.session.commit():
                     flash('Registration done, you can now log in')
                     return redirect('/')
                 else:
@@ -156,42 +154,37 @@ def settings():
     POST - Validates the settings form and check if the values are right. If they pass the informations is stored in
     the database and the tenant is redirected to the front page.
     If they fail the settings form is rendered with error messages.
+
     :return: Redirect or renders template
     """
     try:
         if check_session():
-            clt = update_tenant_client.UpdateTenantInformationSqlClient()
-            current_tenant = clt.get_tenants(session['username'])[0]
+            current_tenant = Tenant.query.filter_by(username=session['username']).first()
 
             if current_tenant is None:
                 return "No user have this ID"
 
             form = EditTenant(obj=current_tenant)
             if form.validate_on_submit():
-                # Get Tenants password for confirmation
-                cl = registration_client.RegisterLoginSqlClient()
-                stored_hash = cl.do_login(session['username'])
 
-                if stored_hash is not None:
-                    hashed_pass = bcrypt.hashpw(form.password.data, stored_hash)
-                    if hashed_pass == stored_hash:
-                        # Saves new pass from form
-                        hashed_new_pass = form.new_password.data
-                        # if the new pass is not empty, hash it
-                        if hashed_new_pass is not '':
-                            hashed_new_pass = bcrypt.hashpw(hashed_new_pass, bcrypt.gensalt())
-
-                        tenant = {'id': current_tenant.id,
-                                  'password': hashed_pass,
-                                  'new_password': hashed_new_pass,
-                                  'active_fortnox': form.active_fortnox.data,
-                                  'image': form.image.data,
-                                  'background_color': form.background_color.data}
-                        clt.update_tenant_information(tenant)
-                        flash('Gym information changed')
-                        return redirect('/')
+                hashed_pass = bcrypt.hashpw(form.password.data, current_tenant.password)
+                # If old pass match
+                if hashed_pass == current_tenant.password:
+                    # Saves new pass from form
+                    new_pass = form.new_password.data
+                    # if the new pass is empty, use the old password
+                    if form.new_password.data is '':
+                        hashed_new_pass = current_tenant.password
                     else:
-                        flash('Wrong password, could not save changes')
+                        hashed_new_pass = bcrypt.hashpw(new_pass, bcrypt.gensalt())
+
+                    current_tenant.password = hashed_new_pass
+                    current_tenant.image = form.image.data
+                    db.session.commit()
+                    flash('Gym information changed')
+                    return redirect('/')
+                else:
+                    flash('Wrong password, could not save changes')
 
             return render_template('settings.html', title='Settings Tab',
                                    form=form,
@@ -211,12 +204,12 @@ def general_information():
     POST - Validates the settings form and check if the values are right. If they pass the informations is stored in
     the database and the tenant is redirected to the front page.
     If they fail the settings form is rendered with error messages.
+
     :return: Redirect or renders template
     """
     try:
         if check_session():
-            clt = update_tenant_client.UpdateTenantInformationSqlClient()
-            current_tenant = clt.get_tenants(session['username'])[0]
+            current_tenant = Tenant.query.filter_by(username=session['username']).first()
 
             if current_tenant is None:
                 return "No user have this ID"
@@ -224,26 +217,20 @@ def general_information():
             form = EditGeneralInformation(obj=current_tenant)
 
             if form.validate_on_submit():
-                # Get Tenants password for confirmation
-                cl = registration_client.RegisterLoginSqlClient()
-                stored_hash = cl.do_login(session['username'])
 
-                if stored_hash is not None:
-                    hashed_pass = bcrypt.hashpw(form.password.data, stored_hash)
-                    if hashed_pass == stored_hash:
-                        tenant = {'id': current_tenant.id,
-                                  'password': hashed_pass,
-                                  'gym_name': form.gym_name.data,
-                                  'address': form.address.data,
-                                  'phone': form.phone.data,
-                                  'zip_code': form.zip_code.data,
-                                  'city': form.city.data,
-                                  'email': form.email.data}
-                        clt.update_tenant_general_information(tenant)
-                        flash('Gym information changed')
-                        return redirect('/')
-                    else:
-                        flash('Wrong password, could not save changes')
+                hashed_pass = bcrypt.hashpw(form.password.data, current_tenant.password)
+                if hashed_pass == current_tenant.password:
+                    current_tenant.company_name = form.company_name.data
+                    current_tenant.address = form.address.data
+                    current_tenant.phone = form.phone.data
+                    current_tenant.zip_code = form.zip_code.data
+                    current_tenant.city = form.city.data
+                    current_tenant.email = form.email.data
+                    db.session.commit()
+                    flash('Gym information changed')
+                    return redirect('/')
+                else:
+                    flash('Wrong password, could not save changes')
 
             return render_template('general_information.html', title='General Information Tab',
                                    form=form,
@@ -303,7 +290,7 @@ def remove_user(user_id):
     """
     try:
         if check_session():
-            user = User.query.filter_by(index=user_id).first()
+            user = User.query.filter_by(id=user_id).first()
             db.session.delete(user)
             db.session.commit()
             return redirect("/all_users/all")
@@ -327,20 +314,18 @@ def add_new_user():
     """
     try:
         if check_session():
-            form = NewUser()
+            form = User()
             if form.validate_on_submit():
-                tmp_usr = User(form.name.data, form.email.data, form.phone.data,
-                               form.address.data, form.address2.data, form.city.data,
-                               form.zip_code.data, form.tag_id.data, form.fortnox_id.data,
-                               form.expiry_date.data, form.birth_date.data,
-                               form.gender.data)
+                tmp_usr = User(0, form.firstname.data, form.lastname.data, form.email.data, form.phone.data,
+                               form.address.data, form.address2.data, form.city.data, form.zip_code.data,
+                               form.gender.data, form.ssn.data, form.expiry_date.data, None, form.status.data)
                 db.session.add(tmp_usr)
                 db.session.commit()
-                flash('Created new user: %s with id: %s' % (form.name.data, tmp_usr.index))
+                flash('Created new user: %s %s with id: %s' % (form.firstname.data, form.lastname.data, tmp_usr.id))
 
-                msg = tmp_usr.index
+                msg = tmp_usr.id
 
-                form = NewUser()
+                form = User()
                 return render_template('new_user.html',
                                        title='New User',
                                        form=form,
@@ -370,25 +355,17 @@ def search_user():
             form = SearchUser()
             hits = []
             if form.validate_on_submit():
-                if form.index.data:
-                    user_index = form.index.data
-                    users = User.query.filter_by(index=user_index)
+                if form.firstname.data:
+                    users = User.query.filter(User.firstname.ilike('%' + form.firstname.data + '%'))
                     hits.extend(users)
-                if form.fortnox_id.data:
-                    fortnox_id = form.fortnox_id.data
-                    users = User.query.filter_by(fortnox_id=fortnox_id)
-                    hits.extend(users)
-                if form.name.data:
-                    name = form.name.data
-                    users = User.query.filter(User.name.ilike('%' + name + '%'))
+                if form.lastname.data:
+                    users = User.query.filter(User.firstname.ilike('%' + form.lastname.data + '%'))
                     hits.extend(users)
                 if form.email.data:
-                    email = form.email.data
-                    users = User.query.filter_by(email=email)
+                    users = User.query.filter(User.email.ilike('%' + form.email.data + '%'))
                     hits.extend(users)
-                if form.phone.data:
-                    phone = form.phone.data
-                    users = User.query.filter_by(phone=phone)
+                if form.city.data:
+                    users = User.query.filter(User.phone.ilike('%' + form.city.data + '%'))
                     hits.extend(users)
                 ret = []
                 for hit in hits:
@@ -420,7 +397,7 @@ def user_page(user_index=None):
     """
     try:
         if check_session():
-            user = User.query.filter_by(index=user_index).first()
+            user = User.query.filter_by(id=user_index).first()
             if user is None:
                 return "No user Found"
             else:
@@ -446,28 +423,42 @@ def edit_user(user_index=None):
     :param user_index:
     :type user_index: integer
     :return: Renders a template
+
+    :param firstname: Firstname of the user.
+    :param lastname: Lastname of the user.
+    :param email: Email address of the user.
+    :param phone: Phone number of the user.
+    :param address: Address 1 of the user.
+    :param address2: Address 2 of the user.
+    :param city: City of the user.
+    :param zip_code: Zip code of the city.
+    :param gender: Gender of the user.
+    :param ssn: Social Security Number.
+    :param expiry_date: Expire date of the users membership.
+    :param status: Status of the users membership.
     """
     try:
         if check_session():
-            user = User.query.filter_by(index=user_index).first()
+            user = User.query.filter_by(id=user_index).first()
             if user is None:
                 return "No user have this ID"
-            form = EditUser(obj=user)
+            form = User(obj=user)
             if form.validate_on_submit():
-                user.name = form.name.data
+                user.firstname = form.firstname.data
+                user.lastname = form.lastname.data
                 user.email = form.email.data
                 user.phone = form.phone.data
                 user.address = form.address.data
                 user.address2 = form.address2.data
                 user.city = form.city.data
                 user.zip_code = form.zip_code.data
-                user.tag_id = form.tag_id.data
                 user.gender = form.gender.data
+                user.ssn = form.ssn.data
                 user.expiry_date = form.expiry_date.data
                 user.status = form.status.data
                 db.session.commit()
 
-                return redirect("/user_page/" + str(user.index))
+                return redirect("/user_page/" + str(user.id))
             if user:
                 return render_template('edit_user.html',
                                        title='Edit User',

@@ -2,7 +2,7 @@ from flask.ext.wtf import Form
 from wtforms import StringField, RadioField, DateField, validators
 
 
-class EditUser(Form):
+class User(Form):
     """
     A representation of the form for editing a user.
 
