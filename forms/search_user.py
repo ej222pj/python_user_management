@@ -7,9 +7,9 @@ class SearchUser(Form):
     A representation of the form for searching a user.
 
     :param firstname: Firstname of the user.
-    :type firstname: string (80
+    :type firstname: string (80)
     :param lastname: Lastname of the user.
-    :type lastname: string
+    :type lastname: string (80)
     :param city: City of the user.
     :type city: string (120)
     :param email: Email address of the user.

@@ -1,9 +1,10 @@
-Python User Management: Python Tutorial
-=======================================
+Python User Management With Login: Python Tutorial
+==================================================
 
 Features
 ----------
 
+- Register and Login to private account
 - Easy user management website. 
 - Used to teach Python.
 - Well documented for you to learn Python and continue developing on your own.

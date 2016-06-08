@@ -9,9 +9,9 @@
     <link rel="icon" href="../../static/favicon.ico">
 
     {% if title %}
-    <title>{{title}} - Crosstag</title>
+    <title>{{title}} - User Management</title>
     {% else %}
-    <title>Crosstag</title>
+    <title>User Management</title>
     {% endif %}
     {% block scripts %}{% endblock%}
 
@@ -29,7 +29,7 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="page-header col-md-8">
-                    <h1>Crosstag <small>Create new account</small></h1>
+                    <h1>User Management <small>Create new account</small></h1>
                 </div>
                 <div class="col-md-1" style="margin-top: 70px;">
                     <a href="/" class="btn btn-default">Back</a>
@@ -76,7 +76,7 @@
                     {{form.repeat_password(size=80, placeholder='Repeat Pasword', id='password', class="form-control", type="password")}}
                 </div>
                 <div class="form-group col-md-6" style="margin-right: 25px;">
-                    <label for="inputEmail3">Phonenumber</label>
+                    <label for="inputEmail3">Phone Number</label>
                     {{form.phone(size=80, placeholder='Phonenumber', class="form-control", type="text")}}
                 </div>
                 <div class="form-group col-md-6">
@@ -109,7 +109,7 @@
         </div>
 
       <footer class="footer">
-        <p>&copy; Crosstag 2013-2016</p>
+        <p>&copy; User Management 2013-2016</p>
       </footer>
 
     </div> <!-- /container -->

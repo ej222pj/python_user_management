@@ -13,9 +13,9 @@
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
 
       {% if title %}
-    <title>{{title}} - Crosstag</title>
+    <title>{{title}} - User Management</title>
     {% else %}
-    <title>Crosstag</title>
+    <title>User Management</title>
     {% endif %}
     {% block scripts %}{% endblock%}
 
@@ -52,10 +52,6 @@
                     <li><a href="/search_user">Search for members</a></li>
                   </ul>
                 </li>
-                <li><a href="/statistics">Statistics</a></li>
-                <li><a href="/last_tagins">Last tagins</a></li>
-                <li><a href="/inactive_check">Latecomers</a></li>
-                <li><a href="/debts">Debts</a></li>
               </ul>
               <ul class="nav navbar-nav navbar-right">
                 <p class="navbar-text">Signed in on <strong>Crosstag</strong></p>
@@ -64,7 +60,6 @@
                   <ul class="dropdown-menu">
                     <li><a href="/settings">Account settings</a></li>
                     <li><a href="/general_information">Information settings</a></li>
-                    <li><a href="/fortnox_information">Fortnox settings</a></li>
                     <li role="separator" class="divider"></li>
                     <li><a href="/logout">Logout</a></li>
                   </ul>

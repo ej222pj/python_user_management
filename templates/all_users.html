@@ -25,7 +25,7 @@
 <tbody>
     <thead>
         <tr>
-            <th>Firstname</th> <th>Lastname</th> <th>Member Status</th>  <th>E-mail</th> <th>Expire Date</th> <th>Linked Tag</th> <th></th>
+            <th>Firstname</th> <th>Lastname</th> <th>Member Status</th>  <th>E-mail</th> <th>Expire Date</th>  <th></th>
         </tr>
     </thead>
     {% if hits %}
@@ -45,13 +45,6 @@
             </td>
             <td>{{hit.email}}</td>
             <td>{{hit.expiry_date}}</td>
-            <td>
-                {% if hit.tag_id == "None" or hit.tag_id == ""  or not hit.tag_id or hit.tag_id == " " %}
-                    <p style="color:red">No</p>
-                {% else %}
-                    <p style="color:green">Yes</p>
-                {% endif %}
-            </td>
             <td><a style="text-decoration: underline;" href='/user_page/{{hit.id}}'>Info</a> </td>
         </tr>
         {% endfor %}
