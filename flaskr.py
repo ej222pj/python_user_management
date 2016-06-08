@@ -61,7 +61,7 @@ def login():
     """
     GET - Renders a login template for the tenant
     POST - Validates the login form and check if the values are right. If they pass the tenant is logged in and redirected
-    to the front page again, if not the login templated is rendered with an message.
+    to the front page again, if not the login template is rendered with an message.
 
     :return: Redirect or renders template
     """
@@ -146,6 +146,113 @@ def registration():
             return redirect('/')
     except:
         flash('Error when trying to register, please try again.')
+        return redirect('/')
+
+
+@app.route('/settings', methods=['GET', 'POST'])
+def settings():
+    """
+    GET - Renders a settings form with tenant information
+    POST - Validates the settings form and check if the values are right. If they pass the informations is stored in
+    the database and the tenant is redirected to the front page.
+    If they fail the settings form is rendered with error messages.
+    :return: Redirect or renders template
+    """
+    try:
+        if check_session():
+            clt = update_tenant_client.UpdateTenantInformationSqlClient()
+            current_tenant = clt.get_tenants(session['username'])[0]
+
+            if current_tenant is None:
+                return "No user have this ID"
+
+            form = EditTenant(obj=current_tenant)
+            if form.validate_on_submit():
+                # Get Tenants password for confirmation
+                cl = registration_client.RegisterLoginSqlClient()
+                stored_hash = cl.do_login(session['username'])
+
+                if stored_hash is not None:
+                    hashed_pass = bcrypt.hashpw(form.password.data, stored_hash)
+                    if hashed_pass == stored_hash:
+                        # Saves new pass from form
+                        hashed_new_pass = form.new_password.data
+                        # if the new pass is not empty, hash it
+                        if hashed_new_pass is not '':
+                            hashed_new_pass = bcrypt.hashpw(hashed_new_pass, bcrypt.gensalt())
+
+                        tenant = {'id': current_tenant.id,
+                                  'password': hashed_pass,
+                                  'new_password': hashed_new_pass,
+                                  'active_fortnox': form.active_fortnox.data,
+                                  'image': form.image.data,
+                                  'background_color': form.background_color.data}
+                        clt.update_tenant_information(tenant)
+                        flash('Gym information changed')
+                        return redirect('/')
+                    else:
+                        flash('Wrong password, could not save changes')
+
+            return render_template('settings.html', title='Settings Tab',
+                                   form=form,
+                                   data=current_tenant.dict(),
+                                   error=form.errors)
+        else:
+            return redirect('/')
+    except:
+        flash('Error Updating information, please try again.')
+        return redirect('/')
+
+
+@app.route('/general_information', methods=['GET', 'POST'])
+def general_information():
+    """
+    GET - Renders a settings form with general information.
+    POST - Validates the settings form and check if the values are right. If they pass the informations is stored in
+    the database and the tenant is redirected to the front page.
+    If they fail the settings form is rendered with error messages.
+    :return: Redirect or renders template
+    """
+    try:
+        if check_session():
+            clt = update_tenant_client.UpdateTenantInformationSqlClient()
+            current_tenant = clt.get_tenants(session['username'])[0]
+
+            if current_tenant is None:
+                return "No user have this ID"
+
+            form = EditGeneralInformation(obj=current_tenant)
+
+            if form.validate_on_submit():
+                # Get Tenants password for confirmation
+                cl = registration_client.RegisterLoginSqlClient()
+                stored_hash = cl.do_login(session['username'])
+
+                if stored_hash is not None:
+                    hashed_pass = bcrypt.hashpw(form.password.data, stored_hash)
+                    if hashed_pass == stored_hash:
+                        tenant = {'id': current_tenant.id,
+                                  'password': hashed_pass,
+                                  'gym_name': form.gym_name.data,
+                                  'address': form.address.data,
+                                  'phone': form.phone.data,
+                                  'zip_code': form.zip_code.data,
+                                  'city': form.city.data,
+                                  'email': form.email.data}
+                        clt.update_tenant_general_information(tenant)
+                        flash('Gym information changed')
+                        return redirect('/')
+                    else:
+                        flash('Wrong password, could not save changes')
+
+            return render_template('general_information.html', title='General Information Tab',
+                                   form=form,
+                                   data=current_tenant.dict(),
+                                   error=form.errors)
+        else:
+            return redirect('/')
+    except:
+        flash('Error Updating general information, please try again.')
         return redirect('/')
 
 
