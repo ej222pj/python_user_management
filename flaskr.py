@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 from optparse import OptionParser
 import config as cfg
 from flaskr_init import app, db, jsonify, render_template, flash, redirect, Response, session
-from db_models.user import User
-from db_models.tenant import Tenant
-from forms.user import User
+from db_models.user import User as UserModel
+from db_models.tenant import Tenant as TenantModel
+from forms.user import User as UserForm
 # from forms.new_user import NewUser
 from forms.search_user import SearchUser
 from forms.login import Login
@@ -69,29 +69,29 @@ def login():
 
     :return: Redirect or renders template
     """
-    #try:
-    if not check_session():
-        form = Login()
-        if form.validate_on_submit():
-            current_tenant = Tenant.query.filter_by(username=form.username.data.title()).first()
-            if current_tenant.password is not None:
-                # Uses stored_hash to check if password is correct.
-                if bcrypt.hashpw(form.password.data, current_tenant.password) == current_tenant.password:
-                    session['loggedIn'] = True
-                    session['username'] = form.username.data.title()
-                    flash('Welcome %s' % form.username.data.title())
-                    return redirect('/')
+    try:
+        if not check_session():
+            form = Login()
+            if form.validate_on_submit():
+                current_tenant = TenantModel.query.filter_by(username=form.username.data.title()).first()
+                if current_tenant.password is not None:
+                    # Uses stored_hash to check if password is correct.
+                    if bcrypt.hashpw(form.password.data, current_tenant.password) == current_tenant.password:
+                        session['loggedIn'] = True
+                        session['username'] = form.username.data.title()
+                        flash('Welcome %s' % form.username.data.title())
+                        return redirect('/')
+                    else:
+                        flash('Wrong username or password')
                 else:
-                    flash('Wrong username or password')
-            else:
-                flash('Wrong username')
+                    flash('Wrong username')
 
-        return render_template('login.html', title='Login', form=form)
-    else:
+            return render_template('login.html', title='Login', form=form)
+        else:
+            return redirect('/')
+    except:
+        flash('Error Trying to login, please try again.')
         return redirect('/')
-    #except:
-        #flash('Error Trying to login, please try again.')
-        #return redirect('/')
 
 
 @app.route('/logout', methods=['GET'])
@@ -121,7 +121,7 @@ def registration():
             form = Register()
             if form.validate_on_submit():
                 # Checks if the all ready exists
-                current_tenant = Tenant.query.filter_by(username=form.username.data.title()).first()
+                current_tenant = TenantModel.query.filter_by(username=form.username.data.title()).first()
 
                 if current_tenant is None:
                     # 1 Get password from form
@@ -129,7 +129,7 @@ def registration():
                     # 2 Hash the password
                     hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
                     # 3 Save the Tenant in the db
-                    tmp_tenant = Tenant(form.username.data.title(), hashed_password, None,  None, form.company_name.data,
+                    tmp_tenant = TenantModel(form.username.data.title(), hashed_password, None,  None, form.company_name.data,
                                         form.address.data, form.phone.data, form.zip_code.data, form.city.data,
                                         form.email.data)
 
@@ -161,7 +161,7 @@ def settings():
     """
     try:
         if check_session():
-            current_tenant = Tenant.query.filter_by(username=session['username']).first()
+            current_tenant = TenantModel.query.filter_by(username=session['username']).first()
 
             if current_tenant is None:
                 return "No user have this ID"
@@ -183,7 +183,7 @@ def settings():
                     current_tenant.password = hashed_new_pass
                     current_tenant.image = form.image.data
                     db.session.commit()
-                    flash('Gym information changed')
+                    flash('Company information changed')
                     return redirect('/')
                 else:
                     flash('Wrong password, could not save changes')
@@ -211,7 +211,7 @@ def general_information():
     """
     try:
         if check_session():
-            current_tenant = Tenant.query.filter_by(username=session['username']).first()
+            current_tenant = TenantModel.query.filter_by(username=session['username']).first()
 
             if current_tenant is None:
                 return "No user have this ID"
@@ -229,7 +229,7 @@ def general_information():
                     current_tenant.city = form.city.data
                     current_tenant.email = form.email.data
                     db.session.commit()
-                    flash('Gym information changed')
+                    flash('Company information changed')
                     return redirect('/')
                 else:
                     flash('Wrong password, could not save changes')
@@ -261,10 +261,10 @@ def all_users(status_filter=None):
 
             # Lists all users
             if status_filter == "all":
-                users = User.query.order_by("expiry_date desc").all()
+                users = UserModel.query.order_by("expiry_date desc").all()
             # List users depending on the membership
             elif status_filter:
-                users = User.query.status_filter(User.status == status_filter.title())
+                users = UserModel.query.filter_by(status=status_filter.title())
             for hit in users:
                 js = hit.dict()
                 ret.append(js)
@@ -272,7 +272,7 @@ def all_users(status_filter=None):
                                    title='All Users',
                                    hits=ret,
                                    filter=status_filter,
-                                   count=len(users))
+                                   count=len(ret))
         else:
             return redirect_not_logged_in()
     except:
@@ -292,7 +292,7 @@ def remove_user(user_id):
     """
     try:
         if check_session():
-            user = User.query.filter_by(id=user_id).first()
+            user = UserModel.query.filter_by(id=user_id).first()
             db.session.delete(user)
             db.session.commit()
             return redirect("/all_users/all")
@@ -309,25 +309,25 @@ def add_new_user():
     """
     GET - Renders a new user form.
     POST - Validates the user form and check if the values are right. If they pass the informations is stored in
-    the database and the user is registrated. The tenant is redirected to the user page.
+    the database and the user is registered. The tenant is redirected to the user page.
     If they fail the user form is rendered with error messages.
 
     :return: Redirect or renders template
     """
     try:
         if check_session():
-            form = User()
+            form = UserForm()
             if form.validate_on_submit():
-                tmp_usr = User(0, form.firstname.data, form.lastname.data, form.email.data, form.phone.data,
-                               form.address.data, form.address2.data, form.city.data, form.zip_code.data,
-                               form.gender.data, form.ssn.data, form.expiry_date.data, None, form.status.data)
+                tmp_usr = UserModel(form.firstname.data, form.lastname.data, form.email.data, form.phone.data,
+                                    form.address.data, form.address2.data, form.city.data, form.zip_code.data,
+                                    form.gender.data, form.ssn.data, form.expiry_date.data, None, form.status.data)
                 db.session.add(tmp_usr)
                 db.session.commit()
                 flash('Created new user: %s %s with id: %s' % (form.firstname.data, form.lastname.data, tmp_usr.id))
 
                 msg = tmp_usr.id
 
-                form = User()
+                form = UserForm()
                 return render_template('new_user.html',
                                        title='New User',
                                        form=form,
@@ -343,6 +343,7 @@ def add_new_user():
 
 
 # Renders a HTML page with a form to search for a specific user or many users.
+# TODO: Search gives duplicates
 @app.route('/search_user', methods=['GET', 'POST'])
 def search_user():
     """
@@ -358,18 +359,19 @@ def search_user():
             hits = []
             if form.validate_on_submit():
                 if form.firstname.data:
-                    users = User.query.filter(User.firstname.ilike('%' + form.firstname.data + '%'))
+                    users = UserModel.query.filter(UserModel.firstname.ilike('%' + form.firstname.data + '%'))
                     hits.extend(users)
                 if form.lastname.data:
-                    users = User.query.filter(User.firstname.ilike('%' + form.lastname.data + '%'))
+                    users = UserModel.query.filter(UserModel.lastname.ilike('%' + form.lastname.data + '%'))
                     hits.extend(users)
                 if form.email.data:
-                    users = User.query.filter(User.email.ilike('%' + form.email.data + '%'))
+                    users = UserModel.query.filter(UserModel.email.ilike('%' + form.email.data + '%'))
                     hits.extend(users)
                 if form.city.data:
-                    users = User.query.filter(User.phone.ilike('%' + form.city.data + '%'))
+                    users = UserModel.query.filter(UserModel.city.ilike('%' + form.city.data + '%'))
                     hits.extend(users)
                 ret = []
+
                 for hit in hits:
                     js = hit.dict()
                     ret.append(js)
@@ -399,7 +401,7 @@ def user_page(user_index=None):
     """
     try:
         if check_session():
-            user = User.query.filter_by(id=user_index).first()
+            user = UserModel.query.filter_by(id=user_index).first()
             if user is None:
                 return "No user Found"
             else:
@@ -441,10 +443,10 @@ def edit_user(user_index=None):
     """
     try:
         if check_session():
-            user = User.query.filter_by(id=user_index).first()
+            user = UserModel.query.filter_by(id=user_index).first()
             if user is None:
                 return "No user have this ID"
-            form = User(obj=user)
+            form = UserForm(obj=user)
             if form.validate_on_submit():
                 user.firstname = form.firstname.data
                 user.lastname = form.lastname.data
