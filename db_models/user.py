@@ -22,13 +22,11 @@ class User(db.Model):
     create_date = db.Column(db.Date)
     status = db.Column(db.String(50))
 
-    def __init__(self, id=None, firstname=None, lastname=None, email=None, phone=None, address=None, address2=None, city=None,
+    def __init__(self, firstname=None, lastname=None, email=None, phone=None, address=None, address2=None, city=None,
                  zip_code=None, gender=None, ssn=None, expiry_date=None, create_date=None, status=None):
         """
         Called when creating a new User class.
 
-        :param id: Id of the User
-        :type id: integer
         :param firstname: Users firstname
         :type firstname: string (80)
         :param lastname: Users lastname
@@ -56,7 +54,6 @@ class User(db.Model):
         :param status: Users status
         :type status: string (50)
         """
-        self.id = id
         self.firstname = firstname
         self.lastname = lastname
         self.email = email
@@ -68,11 +65,11 @@ class User(db.Model):
         self.gender = gender
         self.ssn = ssn
         self.expiry_date = expiry_date
-        self.create_date = create_date
+        self.create_date = datetime.now()
         self.status = status
 
-        if self.create_date is None:
-            self.create_date = datetime.now()
+        # if self.create_date is None:
+        # self.create_date = datetime.now()
 
     def dict(self):
         return {'id': self.id, 'firstname': self.firstname, 'lastname': self.lastname, 'email': self.email,

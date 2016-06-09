@@ -69,31 +69,29 @@ def login():
 
     :return: Redirect or renders template
     """
-    try:
-        if not check_session():
-            form = Login()
-            if form.validate_on_submit():
-                stored_hash = Tenant.query.with_entities(Tenant.password)\
-                    .filter_by(username=form.username.data.title()).first()
-
-                if stored_hash is not None:
-                    # Uses stored_hash to check if password is correct.
-                    if bcrypt.hashpw(form.password.data, stored_hash) == stored_hash:
-                        session['loggedIn'] = True
-                        session['username'] = form.username.data.title()
-                        flash('Welcome %s' % form.username.data.title())
-                        return redirect('/')
-                    else:
-                        flash('Wrong username or password')
+    #try:
+    if not check_session():
+        form = Login()
+        if form.validate_on_submit():
+            current_tenant = Tenant.query.filter_by(username=form.username.data.title()).first()
+            if current_tenant.password is not None:
+                # Uses stored_hash to check if password is correct.
+                if bcrypt.hashpw(form.password.data, current_tenant.password) == current_tenant.password:
+                    session['loggedIn'] = True
+                    session['username'] = form.username.data.title()
+                    flash('Welcome %s' % form.username.data.title())
+                    return redirect('/')
                 else:
-                    flash('Wrong username')
+                    flash('Wrong username or password')
+            else:
+                flash('Wrong username')
 
-            return render_template('login.html', title='Login', form=form)
-        else:
-            return redirect('/')
-    except:
-        flash('Error Trying to login, please try again.')
+        return render_template('login.html', title='Login', form=form)
+    else:
         return redirect('/')
+    #except:
+        #flash('Error Trying to login, please try again.')
+        #return redirect('/')
 
 
 @app.route('/logout', methods=['GET'])
@@ -108,12 +106,12 @@ def logout():
     return redirect('/')
 
 
-@app.route('/registration', methods=['GET', 'POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def registration():
     """
     GET - Renders a registration form.
     POST - Validates the login form and check if the values are right. If they pass the informations is stored in
-    the database and the tenant is registrated and is redirected to the front page.
+    the database and the tenant is registered and is redirected to the front page.
     If they fail the registration form is rendered with error messages.
 
     :return: Redirect or renders template
@@ -122,18 +120,22 @@ def registration():
         if not check_session():
             form = Register()
             if form.validate_on_submit():
+                # Checks if the all ready exists
+                current_tenant = Tenant.query.filter_by(username=form.username.data.title()).first()
 
-                # 1 Get password from form
-                password = form.password.data.encode('utf-8')
-                # 2 Hash the password
-                hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
-                # 3 Save the Tenant in the db
-                tmp_tenant = Tenant(0, form.username.data.title(), hashed_password, form.company_name.data, None,
-                                    form.address.data, form.phone.data, form.zip_code.data, form.city.data,
-                                    form.email.data)
+                if current_tenant is None:
+                    # 1 Get password from form
+                    password = form.password.data.encode('utf-8')
+                    # 2 Hash the password
+                    hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
+                    # 3 Save the Tenant in the db
+                    tmp_tenant = Tenant(form.username.data.title(), hashed_password, None,  None, form.company_name.data,
+                                        form.address.data, form.phone.data, form.zip_code.data, form.city.data,
+                                        form.email.data)
 
-                db.session.add(tmp_tenant)
-                if db.session.commit():
+                    db.session.add(tmp_tenant)
+                    db.session.commit()
+
                     flash('Registration done, you can now log in')
                     return redirect('/')
                 else:
@@ -476,14 +478,13 @@ def edit_user(user_index=None):
 
 
 if __name__ == '__main__':
-    parser = OptionParser(usage="usage: %prog [options] arg \nTry this: " +
-                          "python flaskr.py", version="%prog 1.0")
+    parser = OptionParser(usage="usage: %prog [options] arg\n Try this: " + "python flaskr.py", version="%prog 1.0")
     parser.add_option('--debug', dest='debug', default=False, action='store_true',
                       help="Do you want to run this thing with debug output?")
     (options, args) = parser.parse_args()
     # config['database_file'] = options.database
     # config['secret_key'] = options.secret
-    #db.create_all()
+    db.create_all()
     # if options.debug:
     app.logger.propagate = False
     app.run(host='0.0.0.0', port=app.config["PORT"], debug=True)

@@ -48,7 +48,7 @@ class Tenant(db.Model):
         self.username = username
         self.password = password
         self.image = image
-        self.create_date = create_date
+        self.create_date = datetime.now()
         self.company_name = company_name
         self.address = address
         self.phone = phone
@@ -56,8 +56,8 @@ class Tenant(db.Model):
         self.city = city
         self.email = email
 
-        if self.create_date is None:
-            self.create_date = datetime.now()
+        # if self.create_date is None:
+        # self.create_date = datetime.now()
 
     def dict(self):
         """
